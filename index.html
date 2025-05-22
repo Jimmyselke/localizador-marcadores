@@ -51,6 +51,28 @@
       font-size: 1rem;
       margin: 0.5rem 0 1rem 0;
     }
+    #opciones li {
+      margin-bottom: 0.5rem;
+      background: #e6f0fa;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #opciones li.correcta {
+      background: #c8e6c9;
+    }
+    #opciones li.incorrecta {
+      background: #ffcdd2;
+    }
+    #cerrarCuestionario {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -73,17 +95,15 @@
     const opcionesEl = document.getElementById('opciones');
     const cerrarBtn = document.getElementById('cerrarCuestionario');
 
-    // URLs JSON públicos en GitHub
-   const urlMarcadores = 'marcadores.json';
-
+    // ✅ Rutas a tus archivos JSON (en la misma carpeta)
+    const urlsMarcadores = ['marcadores1.json', 'marcadores2.json'];
 
     let marcadores = [];
     let cuestionarioAbierto = false;
 
     async function cargarMarcadores() {
       try {
-        // Cargar ambos JSONs y unirlos
-        const promesas = urlMarcadores.map(url => fetch(url).then(res => res.json()));
+        const promesas = urlsMarcadores.map(url => fetch(url).then(res => res.json()));
         const resultados = await Promise.all(promesas);
         marcadores = resultados.flat();
       } catch (e) {
@@ -92,9 +112,8 @@
       }
     }
 
-    // Calcula distancia en metros entre dos coordenadas (Haversine)
     function calcularDistancia(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // metros
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI/180;
       const φ2 = lat2 * Math.PI/180;
       const Δφ = (lat2 - lat1) * Math.PI/180;
@@ -111,11 +130,25 @@
     function mostrarCuestionario(marcador) {
       preguntaEl.textContent = marcador.pregunta;
       opcionesEl.innerHTML = '';
-      marcador.opciones.forEach(op => {
+
+      marcador.opciones.forEach((opcion, index) => {
         const li = document.createElement('li');
-        li.textContent = op;
+        li.textContent = opcion;
+
+        li.onclick = () => {
+          if (index + 1 === marcador.correcta) {
+            li.classList.add('correcta');
+          } else {
+            li.classList.add('incorrecta');
+            opcionesEl.children[marcador.correcta - 1].classList.add('correcta');
+          }
+
+          [...opcionesEl.children].forEach(el => el.onclick = null); // Desactivar todos
+        };
+
         opcionesEl.appendChild(li);
       });
+
       cuestionarioEl.style.display = 'block';
       cuestionarioAbierto = true;
     }
@@ -133,7 +166,6 @@
       if (Math.abs(dx) < 0.0001 && Math.abs(dy) < 0.0001) {
         direccion = 'Estás justo en el marcador.';
       } else {
-        // Direcciones simples
         const ns = dy > 0 ? 'N' : 'S';
         const eo = dx > 0 ? 'E' : 'O';
         direccion = ns + eo;
@@ -153,15 +185,11 @@
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
 
-        console.log(`Posición actual: lat=${lat}, lon=${lon}`); // Para debug
-
-        // Buscar marcador más cercano
         let distanciaMin = Infinity;
         let marcadorCercano = null;
 
         marcadores.forEach(m => {
           const d = calcularDistancia(lat, lon, m.posicion.lat, m.posicion.lng);
-          console.log(`Distancia a ${m.titulo}: ${d.toFixed(2)} metros`); // Debug
           if (d < distanciaMin) {
             distanciaMin = d;
             marcadorCercano = m;
