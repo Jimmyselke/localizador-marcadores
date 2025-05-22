@@ -146,6 +146,8 @@
       }
 
       navigator.geolocation.watchPosition(pos => {
+        console.log(`Ubicación actual: lat=${lat}, lon=${lon}`);
+
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
 
