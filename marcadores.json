@@ -19,30 +19,80 @@
       {
         "pregunta": "¿Del 1 al 4 cuanto de bonito es -4 es lo mas alto-?",
         "opciones": ["1", "2", "3", "4"],
-        "correcta": 1
+        "correcta": 4
       }
     ]
   }
 ,
   {
     "titulo": "Instituto",
-    "pregunta": "Cual es?",
-    "opciones": ["I.E.S Chabas", "I.E.S Maria Ibars", "I.E.S Paquetes", "I.E.S Medina"],
-    "correcta": 1,
     "posicion": { "lat": 38.83059819682679, "lng": 0.10026097297668458 }
+
+        "preguntas": [
+    {
+        "pregunta": "¿Cuál es?",
+        "opciones": ["I.E.S Chabas", "I.E.S Maria Ibars", "I.E.S Paquetes", "I.E.S Medina"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿De qué color es?",
+        "opciones": ["Rojo", "Blanco", "Gris", "Beige"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿Del 1 al 4 cuanto de bonito es -4 es lo mas alto-?",
+        "opciones": ["1", "2", "3", "4"],
+        "correcta": 4
+      }
+    ]
+  }
   },
-  {
+   {
     "titulo": "Instituto",
-    "pregunta": "Cual es?",
-    "opciones": ["I.E.S La mar", "I.E.S Chabas", "I.E.S Medina", "I.E.S Polaino"],
-    "correcta": 1,
-    "posicion": { "lat": 38.78874676627095, "lng": 0.1780557632446289 }
+    "posicion": {
+      "lat": 38.78874676627095,
+      "lng": 0.1780557632446289
+    },
+    "preguntas": [
+      {
+        "pregunta": "¿Cuál es?",
+        "opciones": ["I.E.S La mar", "I.E.S Chabas", "I.E.S Medina", "I.E.S Polaino"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿Dónde está ubicado?",
+        "opciones": ["Ciudad", "Campo", "Costa", "Montaña"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿Cuántos pizarras tiene la clase de DAW?",
+        "opciones": ["1", "2", "23", "12"],
+        "correcta": 1
+      }
+    ]
   },
-  {
+   {
     "titulo": "Lugar emblematico DAW",
-    "pregunta": "Que ves?",
-    "opciones": ["McDonalds", "Burger King", "Taco Bell", "Bamboo"],
-    "correcta": 1,
-    "posicion": { "lat": 38.78800666263995, "lng": 0.17231047153472903 }
+    "posicion": {
+      "lat": 38.78800666263995,
+      "lng": 0.17231047153472903
+    },
+    "preguntas": [
+      {
+        "pregunta": "¿Qué ves?",
+        "opciones": ["McDonalds", "Burger King", "Taco Bell", "Bamboo"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿Cuál es su especialidad?",
+        "opciones": ["Hamburguesas", "Tacos", "Sushi", "Pizza"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿En qué ciudad está?",
+        "opciones": ["Javea", "Valencia", "Alicante", "Madrid"],
+        "correcta": 1
+      }
+    ]
   }
 ]
