@@ -101,16 +101,16 @@
     let marcadores = [];
     let cuestionarioAbierto = false;
 
-    async function cargarMarcadores() {
-      try {
-        const promesas = urlsMarcadores.map(url => fetch(url).then(res => res.json()));
-        const resultados = await Promise.all(promesas);
-        marcadores = resultados.flat();
-      } catch (e) {
-        distanciaElement.innerText = 'Error cargando marcadores.';
-        console.error(e);
-      }
-    }
+  async function cargarMarcadores() {
+  try {
+    const res = await fetch('marcadores.json');
+    marcadores = await res.json();
+  } catch (e) {
+    distanciaElement.innerText = 'Error cargando marcadores.';
+    console.error(e);
+  }
+}
+
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
