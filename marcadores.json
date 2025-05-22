@@ -1,0 +1,30 @@
+[
+  {
+    "titulo": "Lugar Emblematico",
+    "pregunta": "Que ves?",
+    "opciones": ["Una catedral", "Una iglesia", "Un colegio", "Un castillo"],
+    "correcta": 4,
+    "posicion": { "lat": 38.84298337560187, "lng": 0.10763168334960938 }
+  },
+  {
+    "titulo": "Instituto",
+    "pregunta": "Cual es?",
+    "opciones": ["I.E.S Chabas", "I.E.S Maria Ibars", "I.E.S Paquetes", "I.E.S Medina"],
+    "correcta": 1,
+    "posicion": { "lat": 38.83059819682679, "lng": 0.10026097297668458 }
+  },
+  {
+    "titulo": "Instituto",
+    "pregunta": "Cual es?",
+    "opciones": ["I.E.S La mar", "I.E.S Chabas", "I.E.S Medina", "I.E.S Polaino"],
+    "correcta": 1,
+    "posicion": { "lat": 38.78874676627095, "lng": 0.1780557632446289 }
+  },
+  {
+    "titulo": "Lugar emblematico DAW",
+    "pregunta": "Que ves?",
+    "opciones": ["McDonalds", "Burger King", "Taco Bell", "Bamboo"],
+    "correcta": 1,
+    "posicion": { "lat": 38.78800666263995, "lng": 0.17231047153472903 }
+  }
+]
