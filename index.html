@@ -2,134 +2,184 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Marcador más cercano</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Localizador de Marcadores</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-    }
-
-    h1 {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 1rem;
+      background: #f0f4f8;
       color: #333;
-      font-size: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-
-    .distance {
-      font-size: 1.2rem;
+    h2 {
+      color: #007acc;
+    }
+    #distancia {
+      font-size: 1.3rem;
       margin: 1rem 0;
+      background: #fff;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    #guia {
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
       color: #555;
     }
-
-    .quiz-button {
-      display: none;
-      margin-top: 1rem;
-      padding: 0.75rem 1.5rem;
-      background: #007bff;
-      color: #fff;
-      border: none;
+    #cuestionario {
+      margin-top: 2rem;
+      max-width: 400px;
+      width: 100%;
+      background: white;
+      padding: 1rem 1.5rem;
       border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      display: none;
     }
-
-    .quiz-button:hover {
-      background: #0056b3;
+    #cuestionario h3 {
+      margin-top: 0;
+      color: #007acc;
+    }
+    #cuestionario p {
+      font-size: 1rem;
+      margin: 0.5rem 0 1rem 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Marcador más cercano</h1>
-    <div class="distance" id="distance">Calculando ubicación...</div>
-    <button class="quiz-button" id="quizButton">Iniciar cuestionario</button>
+  <h2>Marcador más cercano</h2>
+  <div id="distancia">Calculando ubicación...</div>
+  <div id="guia">🧭 Esperando posición...</div>
+
+  <div id="cuestionario">
+    <h3>Cuestionario disponible</h3>
+    <p id="pregunta"></p>
+    <ul id="opciones"></ul>
+    <button id="cerrarCuestionario">Cerrar</button>
   </div>
 
   <script>
-    const distanceElement = document.getElementById('distance');
-    const quizButton = document.getElementById('quizButton');
-    const radio = 6371e3; // radio de la Tierra en metros
-    const DISTANCIA_LIMITE = 100; // ahora 100 metros
+    const distanciaElement = document.getElementById('distancia');
+    const guiaElement = document.getElementById('guia');
+    const cuestionarioEl = document.getElementById('cuestionario');
+    const preguntaEl = document.getElementById('pregunta');
+    const opcionesEl = document.getElementById('opciones');
+    const cerrarBtn = document.getElementById('cerrarCuestionario');
 
-    // Cargar marcadores
-    const urls = [
-      "https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Denia.json",
-      "https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Javea.json"
-    ];
+    // URL del JSON público de Github con los marcadores
+    const urlMarcadores = 'https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Javea.json';
 
-    const getJSON = async url => {
-      const res = await fetch(url);
-      return await res.json();
+    let marcadores = [];
+    let cuestionarioAbierto = false;
+
+    async function cargarMarcadores() {
+      try {
+        const res = await fetch(urlMarcadores);
+        marcadores = await res.json();
+      } catch (e) {
+        distanciaElement.innerText = 'Error cargando marcadores.';
+      }
+    }
+
+    // Calcula distancia en metros entre dos coordenadas (Haversine)
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // metros
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2 - lat1) * Math.PI/180;
+      const Δλ = (lon2 - lon1) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c;
+    }
+
+    function mostrarCuestionario(marcador) {
+      preguntaEl.textContent = marcador.pregunta;
+      opcionesEl.innerHTML = '';
+      marcador.opciones.forEach((op, idx) => {
+        const li = document.createElement('li');
+        li.textContent = op;
+        opcionesEl.appendChild(li);
+      });
+      cuestionarioEl.style.display = 'block';
+      cuestionarioAbierto = true;
+    }
+
+    cerrarBtn.onclick = () => {
+      cuestionarioEl.style.display = 'none';
+      cuestionarioAbierto = false;
     };
 
-    Promise.all(urls.map(getJSON)).then((data) => {
-      const marcadores = data.flat();
+    function actualizarGuia(latUsuario, lonUsuario, marcadorCercano) {
+      const dx = marcadorCercano.posicion[1] - lonUsuario;
+      const dy = marcadorCercano.posicion[0] - latUsuario;
+      let direccion = '';
 
-      navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
+      if (Math.abs(dx) < 0.0001 && Math.abs(dy) < 0.0001) {
+        direccion = 'Estás justo en el marcador.';
+      } else {
+        // Calculamos dirección simple N, S, E, O y combinaciones
+        const ns = dy > 0 ? 'N' : 'S';
+        const eo = dx > 0 ? 'E' : 'O';
+        direccion = ns + eo;
+      }
+      guiaElement.textContent = `🧭 Mueve hacia el ${direccion}`;
+    }
 
-          let marcadorCercano = null;
-          let distanciaMinima = Infinity;
+    async function iniciarLocalizador() {
+      await cargarMarcadores();
 
-          marcadores.forEach(marcador => {
-            const lat2 = marcador.lat;
-            const lon2 = marcador.lon;
+      if (!navigator.geolocation) {
+        distanciaElement.innerText = 'Geolocalización no soportada.';
+        return;
+      }
 
-            const φ1 = latitude * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2 - latitude) * Math.PI/180;
-            const Δλ = (lon2 - longitude) * Math.PI/180;
+      navigator.geolocation.watchPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        // Buscar marcador más cercano
+        let distanciaMin = Infinity;
+        let marcadorCercano = null;
 
-            const distancia = radio * c;
-
-            if (distancia < distanciaMinima) {
-              distanciaMinima = distancia;
-              marcadorCercano = marcador;
-            }
-          });
-
-          distanciaElement.innerText = `Estás a ${Math.round(distanciaMinima)} m de: ${marcadorCercano.nombre}`;
-
-          if (distanciaMinima <= DISTANCIA_LIMITE) {
-            quizButton.style.display = 'inline-block';
-            quizButton.onclick = () => {
-              window.location.href = marcadorCercano.cuestionario;
-            };
-          } else {
-            quizButton.style.display = 'none';
+        marcadores.forEach(m => {
+          const d = calcularDistancia(lat, lon, m.posicion[0], m.posicion[1]);
+          if (d < distanciaMin) {
+            distanciaMin = d;
+            marcadorCercano = m;
           }
-        },
-        (err) => {
-          distanceElement.innerText = "No se pudo obtener la ubicación.";
-          console.error(err);
-        },
-        {
-          enableHighAccuracy: true
+        });
+
+        distanciaElement.innerText = `Estás a ${distanciaMin.toFixed(0)} metros de: ${marcadorCercano.titulo}`;
+        actualizarGuia(lat, lon, marcadorCercano);
+
+        // Abrir cuestionario si estás a menos de 100 metros y no está abierto
+        if (distanciaMin <= 100 && !cuestionarioAbierto) {
+          mostrarCuestionario(marcadorCercano);
         }
-      );
-    });
+
+      }, err => {
+        distanciaElement.innerText = 'Error obteniendo ubicación.';
+        guiaElement.textContent = '';
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000
+      });
+    }
+
+    window.onload = iniciarLocalizador;
   </script>
 </body>
 </html>
