@@ -1,11 +1,29 @@
 [
   {
     "titulo": "Lugar Emblematico",
-    "pregunta": "Que ves?",
-    "opciones": ["Una catedral", "Una iglesia", "Un colegio", "Un castillo"],
-    "correcta": 4,
-    "posicion": { "lat": 38.84298337560187, "lng": 0.10763168334960938 }
-  },
+    "posicion": {
+      "lat": 38.84298337560187,
+      "lng": 0.10763168334960938
+    },
+    "preguntas": [
+      {
+        "pregunta": "¿Qué ves?",
+        "opciones": ["Una catedral", "Una iglesia", "Un colegio", "Un castillo"],
+        "correcta": 4
+      },
+      {
+        "pregunta": "¿De qué color es?",
+        "opciones": ["Amarillo", "Blanco", "Gris", "Beige"],
+        "correcta": 1
+      },
+      {
+        "pregunta": "¿Del 1 al 4 cuanto de bonito es -4 es lo mas alto-?",
+        "opciones": ["1", "2", "3", "4"],
+        "correcta": 1
+      }
+    ]
+  }
+,
   {
     "titulo": "Instituto",
     "pregunta": "Cual es?",
