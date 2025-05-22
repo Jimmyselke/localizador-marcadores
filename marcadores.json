@@ -22,14 +22,12 @@
         "correcta": 4
       }
     ]
-  }
-,
+  },
   {
     "titulo": "Instituto",
-    "posicion": { "lat": 38.83059819682679, "lng": 0.10026097297668458 }
-
-        "preguntas": [
-    {
+    "posicion": { "lat": 38.83059819682679, "lng": 0.10026097297668458 },
+    "preguntas": [
+      {
         "pregunta": "¿Cuál es?",
         "opciones": ["I.E.S Chabas", "I.E.S Maria Ibars", "I.E.S Paquetes", "I.E.S Medina"],
         "correcta": 1
@@ -45,9 +43,8 @@
         "correcta": 4
       }
     ]
-  }
-  ,
-   {
+  },
+  {
     "titulo": "Instituto",
     "posicion": {
       "lat": 38.78874676627095,
@@ -71,7 +68,7 @@
       }
     ]
   },
-   {
+  {
     "titulo": "Lugar emblematico DAW",
     "posicion": {
       "lat": 38.78800666263995,
