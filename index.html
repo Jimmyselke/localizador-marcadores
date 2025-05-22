@@ -67,8 +67,6 @@
 
   <script>
     const distanciaElement = document.getElementById('distancia');
-    console.log(distanciaElement); // <-- Aquí para debug
-
     const guiaElement = document.getElementById('guia');
     const cuestionarioEl = document.getElementById('cuestionario');
     const preguntaEl = document.getElementById('pregunta');
@@ -131,7 +129,6 @@
       if (Math.abs(dx) < 0.0001 && Math.abs(dy) < 0.0001) {
         direccion = 'Estás justo en el marcador.';
       } else {
-        // Calculamos dirección simple N, S, E, O y combinaciones
         const ns = dy > 0 ? 'N' : 'S';
         const eo = dx > 0 ? 'E' : 'O';
         direccion = ns + eo;
@@ -147,38 +144,42 @@
         return;
       }
 
-      navigator.geolocation.watchPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+navigator.geolocation.watchPosition(pos => {
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
 
-        // Buscar marcador más cercano
-        let distanciaMin = Infinity;
-        let marcadorCercano = null;
+  let distanciaMin = Infinity;
+  let marcadorCercano = null;
 
-        marcadores.forEach(m => {
-          const d = calcularDistancia(lat, lon, m.posicion[0], m.posicion[1]);
-          if (d < distanciaMin) {
-            distanciaMin = d;
-            marcadorCercano = m;
-          }
-        });
+  marcadores.forEach(m => {
+    const d = calcularDistancia(lat, lon, m.posicion[0], m.posicion[1]);
+    if (d < distanciaMin) {
+      distanciaMin = d;
+      marcadorCercano = m;
+    }
+  });
 
-        distanciaElement.innerText = `Estás a ${distanciaMin.toFixed(0)} metros de: ${marcadorCercano.titulo}`;
-        actualizarGuia(lat, lon, marcadorCercano);
+  if (marcadorCercano) {
+    distanciaElement.innerText = `Estás a ${distanciaMin.toFixed(0)} metros de: ${marcadorCercano.titulo}`;
+    actualizarGuia(lat, lon, marcadorCercano);
 
-        // Abrir cuestionario si estás a menos de 100 metros y no está abierto
-        if (distanciaMin <= 100 && !cuestionarioAbierto) {
-          mostrarCuestionario(marcadorCercano);
-        }
+    if (distanciaMin <= 100 && !cuestionarioAbierto) {
+      mostrarCuestionario(marcadorCercano);
+    }
+  } else {
+    distanciaElement.innerText = 'No se encontró ningún marcador cercano.';
+    guiaElement.textContent = '';
+  }
 
-      }, err => {
-        distanciaElement.innerText = 'Error obteniendo ubicación.';
-        guiaElement.textContent = '';
-      }, {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000
-      });
+}, err => {
+  distanciaElement.innerText = 'Error obteniendo ubicación.';
+  guiaElement.textContent = '';
+}, {
+  enableHighAccuracy: true,
+  maximumAge: 10000,
+  timeout: 5000
+});
+
     }
 
     window.onload = iniciarLocalizador;
