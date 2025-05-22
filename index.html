@@ -6,114 +6,130 @@
   <title>Marcador más cercano</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
       padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
     }
-    #distancia {
+
+    h1 {
+      color: #333;
       font-size: 1.5rem;
-      margin: 1rem 0;
     }
-    #flecha {
-      font-size: 4rem;
-      transform: rotate(0deg);
-      transition: transform 0.5s ease;
+
+    .distance {
+      font-size: 1.2rem;
+      margin: 1rem 0;
+      color: #555;
+    }
+
+    .quiz-button {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .quiz-button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>Marcador más cercano</h1>
-  <div id="distancia">Calculando ubicación...</div>
-  <div id="flecha">🧭</div>
+  <div class="container">
+    <h1>Marcador más cercano</h1>
+    <div class="distance" id="distance">Calculando ubicación...</div>
+    <button class="quiz-button" id="quizButton">Iniciar cuestionario</button>
+  </div>
 
   <script>
+    const distanceElement = document.getElementById('distance');
+    const quizButton = document.getElementById('quizButton');
+    const radio = 6371e3; // radio de la Tierra en metros
+    const DISTANCIA_LIMITE = 100; // ahora 100 metros
+
+    // Cargar marcadores
     const urls = [
-      'https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Denia.json',
-      'https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Javea.json'
+      "https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Denia.json",
+      "https://raw.githubusercontent.com/Jimmyselke/Marcadores-Publicos/main/Javea.json"
     ];
 
-    const distanciaEl = document.getElementById('distancia');
-    const flecha = document.getElementById('flecha');
+    const getJSON = async url => {
+      const res = await fetch(url);
+      return await res.json();
+    };
 
-    let userLat = 0;
-    let userLng = 0;
+    Promise.all(urls.map(getJSON)).then((data) => {
+      const marcadores = data.flat();
 
-    function toRad(value) {
-      return value * Math.PI / 180;
-    }
+      navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
 
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-      const R = 6371e3;
-      const φ1 = toRad(lat1);
-      const φ2 = toRad(lat2);
-      const Δφ = toRad(lat2 - lat1);
-      const Δλ = toRad(lon2 - lon1);
+          let marcadorCercano = null;
+          let distanciaMinima = Infinity;
 
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          marcadores.forEach(marcador => {
+            const lat2 = marcador.lat;
+            const lon2 = marcador.lon;
 
-      return R * c;
-    }
+            const φ1 = latitude * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2 - latitude) * Math.PI/180;
+            const Δλ = (lon2 - longitude) * Math.PI/180;
 
-    function calcularDireccion(lat1, lon1, lat2, lon2) {
-      const y = Math.sin(toRad(lon2 - lon1)) * Math.cos(toRad(lat2));
-      const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-                Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lon2 - lon1));
-      const brng = Math.atan2(y, x);
-      return (brng * 180 / Math.PI + 360) % 360;
-    }
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-    async function cargarMarcadores() {
-      const resultados = await Promise.all(
-        urls.map(url => fetch(url).then(res => res.json()).catch(() => []))
-      );
-      return resultados.flat();
-    }
+            const distancia = radio * c;
 
-    function actualizarFlecha(angulo) {
-      flecha.style.transform = `rotate(${angulo}deg)`;
-    }
+            if (distancia < distanciaMinima) {
+              distanciaMinima = distancia;
+              marcadorCercano = marcador;
+            }
+          });
 
-    async function localizar() {
-      const marcadores = await cargarMarcadores();
+          distanciaElement.innerText = `Estás a ${Math.round(distanciaMinima)} m de: ${marcadorCercano.nombre}`;
 
-      if (!navigator.geolocation) {
-        distanciaEl.textContent = "Tu navegador no permite obtener ubicación.";
-        return;
-      }
-
-      navigator.geolocation.watchPosition(pos => {
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-
-        let masCercano = null;
-        let menorDistancia = Infinity;
-
-        marcadores.forEach(m => {
-          const d = calcularDistancia(userLat, userLng, m.posicion.lat, m.posicion.lng);
-          if (d < menorDistancia) {
-            menorDistancia = d;
-            masCercano = m;
+          if (distanciaMinima <= DISTANCIA_LIMITE) {
+            quizButton.style.display = 'inline-block';
+            quizButton.onclick = () => {
+              window.location.href = marcadorCercano.cuestionario;
+            };
+          } else {
+            quizButton.style.display = 'none';
           }
-        });
-
-        if (masCercano) {
-          const distanciaMetros = Math.round(menorDistancia);
-          distanciaEl.textContent = `Estás a ${distanciaMetros} m de: ${masCercano.titulo}`;
-          const direccion = calcularDireccion(userLat, userLng, masCercano.posicion.lat, masCercano.posicion.lng);
-          actualizarFlecha(direccion);
+        },
+        (err) => {
+          distanceElement.innerText = "No se pudo obtener la ubicación.";
+          console.error(err);
+        },
+        {
+          enableHighAccuracy: true
         }
-
-      }, err => {
-        distanciaEl.textContent = "No se pudo obtener tu ubicación.";
-      }, {
-        enableHighAccuracy: true
-      });
-    }
-
-    localizar();
+      );
+    });
   </script>
 </body>
 </html>
