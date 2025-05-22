@@ -3,36 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Localizador de Marcadores con Cuestionario</title>
+  <title>Localizador de Marcadores</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0; padding: 1rem;
+      margin: 0;
+      padding: 1rem;
       background: #f0f4f8;
       color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
     h2 {
       color: #007acc;
     }
+
     #distancia {
       font-size: 1.3rem;
       margin: 1rem 0;
       background: #fff;
       padding: 1rem 2rem;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 400px;
       text-align: center;
     }
+
     #guia {
       font-size: 1.1rem;
       margin-top: 0.5rem;
       color: #555;
     }
+
     #cuestionario {
       margin-top: 2rem;
       max-width: 400px;
@@ -40,50 +45,33 @@
       background: white;
       padding: 1rem 1.5rem;
       border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
       display: none;
     }
+
     #cuestionario h3 {
       margin-top: 0;
       color: #007acc;
     }
+
     #cuestionario p {
       font-size: 1rem;
       margin: 0.5rem 0 1rem 0;
     }
-    #opciones li {
-      margin: 0.5rem 0;
+
+    #opciones button {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.5rem;
       padding: 0.5rem;
-      background: #e0e7ff;
-      border-radius: 5px;
-      cursor: pointer;
-      list-style-type: none;
-      transition: background-color 0.3s;
-    }
-    #opciones li:hover {
-      background: #a2bffa;
-    }
-    #opciones li.correct {
-      background: #9ae6b4 !important;
-      cursor: default;
-    }
-    #opciones li.incorrect {
-      background: #feb2b2 !important;
-      cursor: default;
-    }
-    #cerrarCuestionario {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
       border: none;
-      background: #007acc;
-      color: white;
+      background: #e0e0e0;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 1rem;
-      display: none;
     }
-    #cerrarCuestionario:hover {
-      background: #005f99;
+
+    #opciones button:hover {
+      background-color: #d0d0d0;
     }
   </style>
 </head>
@@ -93,28 +81,26 @@
   <div id="guia">🧭 Esperando posición...</div>
 
   <div id="cuestionario">
-    <h3 id="tituloMarcador">Cuestionario</h3>
+    <h3>Cuestionario</h3>
     <p id="pregunta"></p>
-    <ul id="opciones"></ul>
+    <div id="opciones"></div>
     <button id="cerrarCuestionario">Cerrar</button>
   </div>
 
   <script>
+    const urlMarcadores = 'marcadores.json';
     const distanciaElement = document.getElementById('distancia');
     const guiaElement = document.getElementById('guia');
     const cuestionarioEl = document.getElementById('cuestionario');
-    const tituloMarcadorEl = document.getElementById('tituloMarcador');
     const preguntaEl = document.getElementById('pregunta');
     const opcionesEl = document.getElementById('opciones');
     const cerrarBtn = document.getElementById('cerrarCuestionario');
 
-    const urlMarcadores = 'marcadores.json';
-
     let marcadores = [];
-    let cuestionarioAbierto = false;
     let marcadorActual = null;
+    let preguntasPendientes = [];
     let preguntaIndex = 0;
-    let posicionUsuario = null;
+    let marcadoresVisitados = [];
 
     async function cargarMarcadores() {
       try {
@@ -127,78 +113,43 @@
     }
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // metros
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
       const Δλ = (lon2 - lon1) * Math.PI / 180;
 
       const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) *
-        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
       return R * c;
     }
 
     function mostrarPregunta() {
-      if (!marcadorActual) return;
-
-      const pregunta = marcadorActual.preguntas[preguntaIndex];
-      tituloMarcadorEl.textContent = marcadorActual.titulo;
+      const pregunta = preguntasPendientes[preguntaIndex];
       preguntaEl.textContent = pregunta.pregunta;
       opcionesEl.innerHTML = '';
 
-      pregunta.opciones.forEach((opcion, i) => {
-        const li = document.createElement('li');
-        li.textContent = opcion;
-        li.addEventListener('click', () => responderPregunta(i));
-        opcionesEl.appendChild(li);
+      pregunta.opciones.forEach((opcion, idx) => {
+        const btn = document.createElement('button');
+        btn.textContent = opcion;
+        btn.onclick = () => {
+          preguntaIndex++;
+          if (preguntaIndex < preguntasPendientes.length) {
+            mostrarPregunta();
+          } else {
+            cuestionarioEl.style.display = 'none';
+            marcadorActual.resuelto = true;
+            marcadoresVisitados.push(marcadorActual.titulo);
+          }
+        };
+        opcionesEl.appendChild(btn);
       });
 
-      cerrarBtn.style.display = 'none';
       cuestionarioEl.style.display = 'block';
-      cuestionarioAbierto = true;
     }
-
-    function responderPregunta(opcionSeleccionada) {
-      const pregunta = marcadorActual.preguntas[preguntaIndex];
-      const opciones = opcionesEl.querySelectorAll('li');
-
-      opciones.forEach((li, i) => {
-        li.removeEventListener('click', () => responderPregunta(i));
-        li.style.cursor = 'default';
-        if (i === pregunta.correcta) {
-          li.classList.add('correct');
-        }
-        if (i === opcionSeleccionada && i !== pregunta.correcta) {
-          li.classList.add('incorrect');
-        }
-      });
-
-      if (opcionSeleccionada === pregunta.correcta) {
-        // Avanzar a siguiente pregunta o marcador
-        preguntaIndex++;
-        if (preguntaIndex >= marcadorActual.preguntas.length) {
-          // Terminado este marcador
-          cerrarBtn.style.display = 'inline-block';
-          preguntaEl.textContent = '¡Has completado este cuestionario!';
-          opcionesEl.innerHTML = '';
-        } else {
-          setTimeout(mostrarPregunta, 1500); // Esperar y mostrar siguiente pregunta
-        }
-      } else {
-        // Respuesta incorrecta: puedes mostrar mensaje o dejar repetir
-        preguntaEl.textContent = 'Respuesta incorrecta, inténtalo de nuevo.';
-      }
-    }
-
-    cerrarBtn.onclick = () => {
-      cuestionarioEl.style.display = 'none';
-      cuestionarioAbierto = false;
-      preguntaIndex = 0;
-      buscarSiguienteMarcador();
-    };
 
     function actualizarGuia(latUsuario, lonUsuario, marcadorCercano) {
       const dx = marcadorCercano.posicion.lng - lonUsuario;
@@ -215,35 +166,9 @@
       guiaElement.textContent = `🧭 Mueve hacia el ${direccion}`;
     }
 
-    function buscarSiguienteMarcador() {
-      if (!posicionUsuario) return;
-
-      // Filtramos marcadores no completados (podrías guardar un array de completados)
-      // Aquí simplemente buscamos el marcador más cercano que no sea el actual
-      let distanciaMin = Infinity;
-      let siguienteMarcador = null;
-
-      marcadores.forEach(m => {
-        if (marcadorActual && m === marcadorActual) return; // Saltar el actual
-
-        const d = calcularDistancia(posicionUsuario.lat, posicionUsuario.lon, m.posicion.lat, m.posicion.lng);
-        if (d < distanciaMin) {
-          distanciaMin = d;
-          siguienteMarcador = m;
-        }
-      });
-
-      if (siguienteMarcador) {
-        marcadorActual = siguienteMarcador;
-        preguntaIndex = 0;
-        distanciaElement.innerText = `Estás a ${distanciaMin.toFixed(0)} metros de: ${marcadorActual.titulo}`;
-        actualizarGuia(posicionUsuario.lat, posicionUsuario.lon, marcadorActual);
-
-        if (distanciaMin <= 100) {
-          mostrarPregunta();
-        }
-      }
-    }
+    cerrarBtn.onclick = () => {
+      cuestionarioEl.style.display = 'none';
+    };
 
     async function iniciarLocalizador() {
       await cargarMarcadores();
@@ -256,16 +181,13 @@
       navigator.geolocation.watchPosition(pos => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        posicionUsuario = { lat, lon };
 
-        // Si cuestionario abierto, no actualizamos marcador ni guía
-        if (cuestionarioAbierto) return;
-
-        // Buscar marcador más cercano
         let distanciaMin = Infinity;
         let marcadorCercano = null;
 
         marcadores.forEach(m => {
+          if (marcadoresVisitados.includes(m.titulo)) return;
+
           const d = calcularDistancia(lat, lon, m.posicion.lat, m.posicion.lng);
           if (d < distanciaMin) {
             distanciaMin = d;
@@ -274,16 +196,17 @@
         });
 
         if (marcadorCercano) {
-          marcadorActual = marcadorCercano;
           distanciaElement.innerText = `Estás a ${distanciaMin.toFixed(0)} metros de: ${marcadorCercano.titulo}`;
           actualizarGuia(lat, lon, marcadorCercano);
 
-          if (distanciaMin <= 100 && !cuestionarioAbierto) {
+          if (distanciaMin <= 100 && marcadorActual !== marcadorCercano) {
+            marcadorActual = marcadorCercano;
+            preguntasPendientes = marcadorCercano.preguntas;
             preguntaIndex = 0;
             mostrarPregunta();
           }
         } else {
-          distanciaElement.innerText = 'No hay marcadores disponibles.';
+          distanciaElement.innerText = 'No quedan marcadores cercanos.';
           guiaElement.textContent = '';
         }
 
